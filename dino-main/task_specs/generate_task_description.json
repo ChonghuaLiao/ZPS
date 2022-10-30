@@ -1,0 +1,9 @@
+{
+  "task_name": "generate_task_description",
+  "labels": {
+    "1": {
+      "instruction": "任务: 生成两个具有相似含义的问题。\n问题1:\"<X1>\"\n问题2:\"",
+      "counter_labels": []
+    }
+  }
+}
