@@ -1,4 +1,4 @@
-# ZPS
+# Zero-Label Prompt Selection
 
 This repository contains the official code for ZPS.
 
