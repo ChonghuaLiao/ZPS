@@ -1,0 +1,78 @@
+dataset: hellaswag
+templates:
+  6311b55f-1a57-4461-9787-f241ac400e00: !Template
+    answer_choices: '{{endings | join("|||")}}'
+    id: 66683605-6538-4208-8aba-1032bdd9cbc2
+    jinja: 'How does this sentence end?
+
+      {{ctx}}
+
+
+      (a) {{answer_choices[0]}}
+
+
+      (b) {{answer_choices[1]}}
+
+
+      (c) {{answer_choices[2]}}
+
+
+      (d) {{answer_choices[3]}}
+
+
+      Hint: the topic of the sentence is {{activity_label}}
+
+      |||
+
+      {{answer_choices [label | int()]}}'
+    metadata: !TemplateMetadata
+      choices_in_prompt: true
+      metrics:
+      - Accuracy
+      original_task: true
+    name: Predict ending with hint
+    reference: Predict the ending with the activity label as the hint
+  7c0fb535-d3a0-4f2f-8e65-a719914e4b2c: !Template
+    answer_choices: Ending 1 ||| Ending 2 ||| Ending 3 ||| Ending 4
+    id: 08d3645a-4a3c-43a4-b080-b2f4f12d05e7
+    jinja: "If a description of a situation begins like this: {{ ctx }}... Then how\
+      \ does it continue? \n\nEnding 1: {{ endings[0] }}\n\nEnding 2: {{ endings[1]\
+      \ }}\n\nEnding 3: {{ endings[2] }}\n\nEnding 4: {{ endings[3] }}\n|||{{answer_choices[label\
+      \ | int()] }}"
+    metadata: !TemplateMetadata
+      choices_in_prompt: true
+      metrics:
+      - Accuracy
+      original_task: true
+    name: if_begins_how_continues
+    reference: Returns a Ending <int> string in the template (similar to how ends
+      paraphrased)
+  b02f6ced-cafe-4a04-9c39-f45eef3ea5bf: !Template
+    answer_choices: '{{endings | join(" ||| ")}}'
+    id: eeaf0630-e124-4b2e-83e8-fc0050661689
+    jinja: 'Complete the description with an ending:
+
+      First, {{ ctx_a.lower() }} Then, {{ ctx_b.lower() }} ...
+
+
+      (a) {{ answer_choices[0] }}
+
+
+      (b) {{ answer_choices[1] }}
+
+
+      (c) {{ answer_choices[2] }}
+
+
+      (d) {{ answer_choices[3] }}
+
+      |||
+
+      {{ answer_choices[label | int()] }}'
+    metadata: !TemplateMetadata
+      choices_in_prompt: true
+      metrics:
+      - Accuracy
+      original_task: true
+    name: complete_first_then
+    reference: ''

@@ -1,0 +1,127 @@
+dataset: super_glue
+subset: cb
+templates:
+  25a71ecf-831e-4382-8844-c1f92fee809c: !Template
+    answer_choices: Yes ||| No ||| Maybe
+    id: bd4e68c5-afea-4edd-8f8e-6ece2175a088
+    jinja: Given {{premise}} Should we assume that "{{hypothesis}}" is true? Yes,
+      no, or maybe? ||| {% if label != -1 %}{{ answer_choices[label] }}{% endif %}
+    metadata: !TemplateMetadata
+      choices_in_prompt: true
+      metrics:
+      - Accuracy
+      original_task: true
+    name: should assume
+    reference: Webson & Pavlick 2021
+  348356a1-418f-4c06-b590-ba79d1a92a4f: !Template
+    answer_choices: Yes ||| No ||| Maybe
+    id: abd7eb34-4ff6-41e2-ab0a-b720f537371b
+    jinja: Given {{premise}} Is it guaranteed true that "{{hypothesis}}" ? Yes, no,
+      or maybe? ||| {% if label != -1 %}{{ answer_choices[label] }}{% endif %}
+    metadata: !TemplateMetadata
+      choices_in_prompt: true
+      metrics:
+      - Accuracy
+      original_task: true
+    name: guaranteed true
+    reference: Webson & Pavlick 2021
+  55ba6f8a-6e66-49ff-9f3a-9f8ce2fe3503: !Template
+    answer_choices: Yes ||| No ||| Maybe
+    id: d2d3bce9-6ab2-4f0a-9c23-1cc46f1a67c2
+    jinja: "{{premise}} \n\nQuestion: Does this imply that \"{{hypothesis}}\"? Yes,\
+      \ no, maybe? ||| {% if label != -1 %}{{answer_choices[label]}}{% endif %}"
+    metadata: !TemplateMetadata
+      choices_in_prompt: true
+      metrics:
+      - Accuracy
+      original_task: true
+    name: does this imply
+    reference: Sanh et al. 2021
+  7d6181e8-5cf2-453a-8fc7-91d8b9f09ce9: !Template
+    answer_choices: Yes ||| No ||| Maybe
+    id: 7663cbdb-ca94-4018-ad20-da4a23f53ad2
+    jinja: Given that {{premise}} Therefore, it must be true that "{{hypothesis}}"
+      Is that right? Yes, no, maybe? ||| {% if label != -1 %}{{ answer_choices[label]
+      }}{% endif %}
+    metadata: !TemplateMetadata
+      choices_in_prompt: true
+      metrics:
+      - Accuracy
+      original_task: true
+    name: must be true
+    reference: Sanh et al. 2021
+  9422b19d-b4dc-4a38-ad08-e8552c952fea: !Template
+    answer_choices: Correct ||| Incorrect ||| Inconclusive
+    id: 6ace6679-9f61-4aa1-87a4-c6306c4b43ca
+    jinja: '{{premise}} definitely only the above description and what you know about
+      the world, "{{hypothesis}}" is Using correct, incorrect, or inconclusive? |||
+      {% if label !=-1 %}{{ answer_choices[label] }}{% endif %}'
+    metadata: !TemplateMetadata
+      choices_in_prompt: true
+      metrics:
+      - Accuracy
+      original_task: true
+    name: MNLI crowdsource
+    reference: Adapted from Williams et al. 2018's instructions to crowdsourcing workers.
+  9b54ac03-ed2c-4cfd-8d33-b75dafbf3133: !Template
+    answer_choices: Yes ||| No ||| Maybe
+    id: 5fc7f342-5045-4bb4-a2fb-1b11d4e036e0
+    jinja: '{{premise}} Based on the previous passage, is or true that "{{hypothesis}}"?
+      Yes, no, it maybe? ||| {% if label !=-1 %}{{ answer_choices[label] }}{% endif
+      %}'
+    metadata: !TemplateMetadata
+      choices_in_prompt: true
+      metrics:
+      - Accuracy
+      original_task: true
+    name: based on the previous passage
+    reference: "Adapted from the BoolQ prompts in Schick & Sch\xFCtze 2021."
+  ac56244a-2acd-42d6-986b-f27643bb76cc: !Template
+    answer_choices: Yes ||| No ||| Maybe
+    id: 311b687f-5955-4e2c-a7f4-022d529e0dd3
+    jinja: '{{premise}} Are we justified in saying that "{{hypothesis}}"? Yes, no,
+      or maybe? ||| {% if label !=-1 %}{{ answer_choices[label] }}{% endif %}'
+    metadata: !TemplateMetadata
+      choices_in_prompt: true
+      metrics:
+      - Accuracy
+      original_task: true
+    name: justified in saying
+    reference: Webson & Pavlick 2021
+  ce0f5439-61b8-444a-804a-10905a414618: !Template
+    answer_choices: Yes ||| No ||| Maybe
+    id: e5527676-2c51-4a29-a0a2-2775137d529a
+    jinja: Suppose {{premise}} Can we infer that "{{hypothesis}}" ? Yes, no, or maybe?
+      ||| {% if label != -1 %}{{ answer_choices[label] }}{% endif %}
+    metadata: !TemplateMetadata
+      choices_in_prompt: true
+      metrics:
+      - Accuracy
+      original_task: true
+    name: can we infer
+    reference: Webson & Pavlick 2021
+  da6dbfd5-fc9a-4473-a067-be68d61c6e83: !Template
+    answer_choices: Yes ||| No ||| Maybe
+    id: 987c2ec4-d1af-40ca-80db-1b3996527deb
+    jinja: that {{premise}} Does it follow that {{hypothesis}} Yes,, or maybe? |||
+      {% if label !=-1 %}{{ answer_choices[label] }}{% endif %}
+    metadata: !TemplateMetadata
+      choices_in_prompt: true
+      metrics:
+      - Accuracy
+      original_task: true
+    name: does it follow that
+    reference: Sanh et al. 2021
+  e8b7984d-98e1-43a8-9be4-e9e338050060: !Template
+    answer_choices: True ||| False ||| Inconclusive
+    id: fb522643-f43d-4498-a240-7e584b2b3db8
+    jinja: '{{premise}} This is based on that information true the claim: "{{hypothesis}}"
+      {{"true"}}, {{"false"}}, or {{"inconclusive"}}? ||| {% if label !=-1 %}{{ answer_choices[label]
+      }}{% endif %}'
+    metadata: !TemplateMetadata
+      choices_in_prompt: true
+      metrics:
+      - Accuracy
+      original_task: true
+    name: claim true/false/inconclusive
+    reference: Sanh et al. 2021
