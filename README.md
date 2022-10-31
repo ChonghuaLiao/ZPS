@@ -11,11 +11,12 @@ We provide code for both zero-label setting and few-shot setting. Including
     - ZPS
     - Self-training
 - Few-shot
+    - ICL
     - GPS
     - GRIPS
     - Model-tuning
     - Prompt-tuning
 
 
-The details to reproduce the main results can be found in [Evaluation](src/README.md)/
+The details to reproduce the main results can be found in [SRC](src/README.md).
 
