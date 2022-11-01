@@ -20,4 +20,4 @@ To launch ZPS evaluation or self-training, directly use `bash run_zps.sh` or `ba
     ```
     or you can use `bash run_grips.sh` to run the grips algorithm.
 - ICL: `bash run_all_eval_priming.sh`
-- GPS: Use `python run_gps.py` to run GPS. You should change `[YOUR_MODEL_PATH]` and `[YOUR_T5XXL_PATH]` to the path to T0 and T5-xxl respectively.
+- GPS: Use `python run_gps.py` to run GPS. You should change `[YOUR_MODEL_PATH]` and `[YOUR_T5XXL_PATH]` to the path to T0 (https://huggingface.co/bigscience/T0) and T5-xxl (https://huggingface.co/google/t5-xxl-lm-adapt) respectively.
