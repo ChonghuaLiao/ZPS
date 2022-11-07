@@ -578,19 +578,8 @@ def main():
     # 读数据集
     for dataset_name, dataset_config_name in test_task_list:
         dev_dataset_dict = {}
-        
-        # In distributed evaluation, the load_dataset function guarantee that only one local process can concurrently
-        # download the dataset.
-        dataset_root = '/localdata/codebook/shaonan/data/T0_test_dataset'
-        regularized_name = f"{dataset_name}" if dataset_config_name is None else f"{dataset_name}_{dataset_config_name}"
-        #if dataset_config_name:
-        #    if dataset_name == 'story_cloze':
-        #        data_path = os.path.join(dataset_root, dataset_name, dataset_config_name, "validation.json")
-        #    else:
-        #        data_path = os.path.join(dataset_root, dataset_name, dataset_config_name, "train.json")
-        #else:
-        #    data_path = os.path.join(dataset_root, dataset_name, "train.json")
-        #train_datasets = load_from_disk(data_path)
+        regularized_name = f'{dataset_name}_{dataset_config_name}' if dataset_config_name else dataset_name
+        dataset_root = '../T0_dataset'
         if dataset_config_name:
             if dataset_name == 'story_cloze':
                 data_path = os.path.join(dataset_root, regularized_name, "test.json")
@@ -599,16 +588,18 @@ def main():
         else:
             data_path = os.path.join(dataset_root, regularized_name, "validation.json")
         # dev_datasets = load_from_disk(data_path)
-        dev_datasets = load_dataset('json', data_files=data_path)['train']
+        raw_datasets = load_dataset('json', data_files=data_path)['train']
         if 'story' in regularized_name:
-            labels = np.array(dev_datasets['answer_right_ending'])
+            labels = np.array(raw_datasets['answer_right_ending'])
             labels = labels.astype('int')
-            dev_datasets = dev_datasets.remove_columns('answer_right_ending')
-            dev_datasets = dev_datasets.add_column('answer_right_ending', labels)
-            dev_datasets = dev_datasets.flatten_indices()
-        dev_datasets = dev_datasets.add_column('id', list(range(len(dev_datasets))))
-
-        # dev_datasets = dev_datasets.shuffle(seed=42, load_from_cache_file=False)
+            raw_datasets = raw_datasets.remove_columns('answer_right_ending')
+            raw_datasets = raw_datasets.add_column('answer_right_ending', labels)
+            raw_datasets = raw_datasets.flatten_indices()
+        logger.info(f'raw dataset for {dataset_name}_{dataset_config_name}: {raw_datasets}')
+        raw_datasets = raw_datasets.add_column('id', list(range(len(raw_datasets))))
+        dev_datasets = raw_datasets
+        # In distributed evaluation, the load_dataset function guarantee that only one local process can concurrently
+        # download the dataset.
         
         # TODO: column names for train and dev
 
@@ -815,7 +806,7 @@ def main():
         checkpoint_dir = os.path.join(args.output_dir, 'checkpoint')
         os.makedirs(checkpoint_dir, exist_ok=True)
         task_name = dataset_name + '_' + dataset_config_name if dataset_config_name is not None else dataset_name
-        for epoch in range(1):
+        for epoch in range(3):
             if args.model_name_or_path:
                 model = AutoModelForSeq2SeqLM.from_pretrained(
                     args.model_name_or_path,
@@ -858,29 +849,29 @@ def main():
             # idx_subset is a np.array
             # 每次train的时候输入一个idx subset, 输出扩张后的sebset, 和该subset对应的pseudo_label (np.array)
             # 输入全量的dev set用来供训完的模型打标（原始的dev set需要保持不动）
-            _, _ = do_train(args, model, tokenizer, all_train_dataset, dev_datasets, accelerator, dataset_name, dataset_config_name, epoch, template_list, preprocess_function)
+            confidence, prompt_vote_pred = do_train(args, model, tokenizer, all_train_dataset, dev_datasets, accelerator, dataset_name, dataset_config_name, epoch, template_list, preprocess_function)
             # 所有sample都被打过标
             if 32 * np.power(5, epoch) > len(dev_datasets):
                 break
             # 在do_train里打标，打完之后把打标idx_subset用来构建新的pseudo_subset
-            # if dataset_name in ['winogrande', 'story_cloze']:
-            #     prompt_vote_pred += 1
-            # prompt_vote_pred = prompt_vote_pred.astype('int')
-            # if dataset_name in ['hellaswag', 'winogrande']:
-            #     prompt_vote_pred = prompt_vote_pred.astype('str')
-            # label_key = 'label'
-            # if dataset_name in ['winogrande']:
-            #     label_key = 'answer'
-            # elif dataset_name in ['story_cloze']:
-            #     label_key = 'answer_right_ending'
-            # print(dev_datasets[label_key])
-            # pseudo_label_datasets = dev_datasets.remove_columns(label_key)
-            # pseudo_label_datasets = pseudo_label_datasets.add_column(label_key, prompt_vote_pred.tolist())
-            # pseudo_label_datasets = pseudo_label_datasets.add_column('confidence', confidence.tolist())
-            # print(pseudo_label_datasets[label_key])
-            # pseudo_label_datasets = pseudo_label_datasets.flatten_indices()
-            # pseudo_label_datasets = build_pseudo_dataset(dataset_name, dataset_config_name, pseudo_label_datasets, 32 * np.power(5, epoch + 1))
-            # all_train_dataset = get_prompted_datasets(dataset_name, dataset_config_name, args, accelerator, preprocess_train_function, preprocess_eval_function, column_names, pseudo_label_datasets)
+            if dataset_name in ['winogrande', 'story_cloze']:
+                prompt_vote_pred += 1
+            prompt_vote_pred = prompt_vote_pred.astype('int')
+            if dataset_name in ['hellaswag', 'winogrande']:
+                prompt_vote_pred = prompt_vote_pred.astype('str')
+            label_key = 'label'
+            if dataset_name in ['winogrande']:
+                label_key = 'answer'
+            elif dataset_name in ['story_cloze']:
+                label_key = 'answer_right_ending'
+            print(dev_datasets[label_key])
+            pseudo_label_datasets = dev_datasets.remove_columns(label_key)
+            pseudo_label_datasets = pseudo_label_datasets.add_column(label_key, prompt_vote_pred.tolist())
+            pseudo_label_datasets = pseudo_label_datasets.add_column('confidence', confidence.tolist())
+            print(pseudo_label_datasets[label_key])
+            pseudo_label_datasets = pseudo_label_datasets.flatten_indices()
+            pseudo_label_datasets = build_pseudo_dataset(dataset_name, dataset_config_name, pseudo_label_datasets, 32 * np.power(5, epoch + 1))
+            all_train_dataset = get_prompted_datasets(dataset_name, dataset_config_name, args, accelerator, preprocess_train_function, preprocess_eval_function, column_names, pseudo_label_datasets)
         torch.save(model.state_dict(), os.path.join(checkpoint_dir, f'{task_name}.bin'))
 
 
@@ -984,13 +975,13 @@ def do_train(args, model, tokenizer, train_dataset, raw_datasets, accelerator, d
         #     break
 
     # 如果只要32sample，这里可以注释
-    # confidence, prompt_vote_pred = get_pseudo_label(args, dataset_name, dataset_config_name, template_list, model, tokenizer, raw_datasets, preprocess_function, accelerator, epoch + 1)
-    return _, _
+    confidence, prompt_vote_pred = get_pseudo_label(args, dataset_name, dataset_config_name, template_list, model, tokenizer, raw_datasets, preprocess_function, accelerator, epoch + 1)
+    return confidence, prompt_vote_pred
 
 
 def do_eval(args, model, tokenizer, dev_dataset_dict, accelerator, data_eval_collator):
     # Metrics
-    metric = load_metric("accuracy.py")
+    metric = load_metric("accuracy")
     template_result_summary = {}
     accuracy_sum = 0
     for uniq_task_name, dataset in dev_dataset_dict.items():
@@ -1072,7 +1063,7 @@ def do_eval(args, model, tokenizer, dev_dataset_dict, accelerator, data_eval_col
 
 def get_pseudo_label(args, dataset_name, dataset_config_name, template_list, model, tokenizer, raw_datasets, preprocess_function, accelerator, epoch):
     '''return pseudo label and confidence'''
-    metric = load_metric("accuracy.py")
+    metric = load_metric("accuracy")
     prompts = DatasetTemplates(
             f"{dataset_name}" if dataset_config_name is None else f"{dataset_name}/{dataset_config_name}",
             template_dir=args.template_dir)
@@ -1170,14 +1161,14 @@ def get_pseudo_label(args, dataset_name, dataset_config_name, template_list, mod
 
     if accelerator.is_main_process:
         regularized_name = f"{dataset_name}" if dataset_config_name is None else f"{dataset_name}_{dataset_config_name}"
-        if epoch == -1:
-            idx_and_preds = np.load(os.path.join(ROOT_DIR, f'{regularized_name}.npy'), allow_pickle=True)
-            idx_and_preds = idx_and_preds.item()
-            all_predictions = idx_and_preds['all_predictions']
-            all_logits = idx_and_preds['all_logits']
-        else:
-            all_predictions = np.array(all_predictions)
-            all_logits = np.array(all_logits)
+        # if epoch == -1:
+        #     idx_and_preds = np.load(os.path.join(ROOT_DIR, f'{regularized_name}.npy'), allow_pickle=True)
+        #     idx_and_preds = idx_and_preds.item()
+        #     all_predictions = idx_and_preds['all_predictions']
+        #     all_logits = idx_and_preds['all_logits']
+        # else:
+        all_predictions = np.array(all_predictions)
+        all_logits = np.array(all_logits)
 
         sorted_logits = np.sort(all_logits, axis=-1)
         confidence = np.exp(sorted_logits[..., -1]) - np.exp(sorted_logits[..., -2])
