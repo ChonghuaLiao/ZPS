@@ -8,5 +8,5 @@ python run_prompt_tuning_new.py \
     --num_training_steps 4000 \
     --eval_period 100 \
     --prompt_num_per_task 5 \
-    --template_dir /home/yanan/shaonan/t-zero/templates_test \
+    --template_dir ../templates_test \
     --output_dir ./pt_with_prompt_new_5token
