@@ -102,7 +102,7 @@ def parse_args():
                         help="Path to pretrained model or model identifier from huggingface.co/models. The list of T0 variants can be found on `https://huggingface.co/bigscience/T0_3B`",
                         required=True, )
     parser.add_argument("--config_name", type=str, default=None, help="Pretrained config name or path if not the same as model_name", )
-    parser.add_argument("--template_dir", type=str, default='/home/yanan/shaonan/t-zero/templates_test', help="模版文件的位置", )
+    parser.add_argument("--template_dir", type=str, default='../templates_test', help="模版文件的位置", )
     parser.add_argument("--tokenizer_name", type=str, default=None, help="Pretrained tokenizer name or path if not the same as model_name", )
     parser.add_argument("--use_slow_tokenizer", action="store_true",
                         help="If passed, will use a slow tokenizer (not backed by the 🤗 Tokenizers library).", )
@@ -444,7 +444,7 @@ def main():
             elif dataset_name == 'winogrande':
                 raw_datasets = load_dataset(dataset_name, dataset_config_name, split="train")
             elif dataset_name == 'hellaswag':
-                raw_datasets = load_dataset('/home/yanan/shaonan/data/hellaswag', split="train")
+                raw_datasets = load_dataset('../T0_dataset/hellaswag', split="train")
             else:
                 # dataset_name: super glue, dataset_config_name: rte
                 raw_datasets = load_dataset(dataset_name, dataset_config_name, split="train")
@@ -453,7 +453,7 @@ def main():
                 # 读anli数据集（不是p3，是原始数据集）
                 raw_datasets = load_dataset(dataset_name, split=f'dev_{dataset_config_name}')
             elif dataset_name == 'hellaswag':
-                raw_datasets = load_dataset('/home/yanan/shaonan/data/hellaswag', split="validation")
+                raw_datasets = load_dataset('../T0_dataset/hellaswag', split="validation")
             else:
                 # dataset_name: super glue, dataset_config_name: rte
                 raw_datasets = load_dataset(dataset_name, dataset_config_name, split="validation")

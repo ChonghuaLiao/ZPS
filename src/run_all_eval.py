@@ -102,7 +102,7 @@ def parse_args():
                         required=True, )
     parser.add_argument("--config_name", type=str, default=None,
                         help="Pretrained config name or path if not the same as model_name", )
-    parser.add_argument("--template_dir", type=str, default='/mfs/shaonan/moonshot/t-zero/templates_test',
+    parser.add_argument("--template_dir", type=str, default='../templates_test',
                         help="模版文件的位置", )
     parser.add_argument("--tokenizer_name", type=str, default=None,
                         help="Pretrained tokenizer name or path if not the same as model_name", )
@@ -376,7 +376,7 @@ def main():
         regularized_name = f"{dataset_name}" if dataset_config_name is None else f"{dataset_name}_{dataset_config_name}"
         if args.dataset_type == 'ga':
             # 注意anli和winogrand使用测试集，因为其dev/test是adversarial的
-            dataset_root = '/localdata/codebook/data/T0_test_dataset'
+            dataset_root = '../T0_dataset'
             if dataset_config_name:
                 if dataset_name == 'story_cloze':
                     data_path = os.path.join(dataset_root, regularized_name, "validation.json")

@@ -1306,7 +1306,7 @@ def parse_args():
                         required=True, )
     parser.add_argument("--config_name", type=str, default=None,
                         help="Pretrained config name or path if not the same as model_name", )
-    parser.add_argument("--template_dir", type=str, default='/mfs/shaonan/moonshot/t-zero/templates_test',
+    parser.add_argument("--template_dir", type=str, default='../templates_test',
                         help="模版文件的位置", )
     parser.add_argument("--tokenizer_name", type=str, default=None,
                         help="Pretrained tokenizer name or path if not the same as model_name", )
@@ -1395,7 +1395,7 @@ def main():
     assert torch.cuda.is_available(), "You need at least 1 GPU to call `parallelize` (even though if there is only 1 GPU, there won't be any model parallelism)."
     model.parallelize()
 
-    para_model_name = '/home/yanan/shaonan/pretrained_model/pegasus_paraphrase'
+    para_model_name = '../pegasus_paraphrase'
     torch_device = 'cuda' if torch.cuda.is_available() else 'cpu'
     para_tokenizer = PegasusTokenizer.from_pretrained(para_model_name)
     para_model = PegasusForConditionalGeneration.from_pretrained(para_model_name)
@@ -1406,7 +1406,7 @@ def main():
 
     for dataset_name, dataset_config_name in test_task_list:
         # 直接读json文件
-        train_file_path = '/home/yanan/shaonan/data/T0_dataset'
+        train_file_path = '../T0_dataset'
         if dataset_config_name:
             train_file_path = os.path.join(train_file_path, f'{dataset_name}_{dataset_config_name}')
         else:

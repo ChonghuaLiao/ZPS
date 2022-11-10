@@ -762,9 +762,7 @@ def build_output_config(args, origin_config_dict, all_description_list, output_e
         # 只用原始任务形式的template
         templates_list = [template_obj for template_obj in templates_list if template_obj.metadata.original_task is True]
 
-        # 只用前N个
-        # if args.input_dir != '/mfs/shaonan/moonshot/t-zero/templates':
-        #     templates_list = templates_list[:args.Top_N_patterns]  # 当前任务的所有template obj
+        
 
         # new_pattern_list = copy.deepcopy(patterns_list)
         new_template_dict = {}
@@ -852,12 +850,11 @@ if __name__ == '__main__':
     parser.add_argument("--output_dir", type=str, required=True,
                         help="The output directory to which the generated dataset is saved")
     parser.add_argument("--task_file", type=str,
-                        default='/home/yanan/shaonan/GPS_clean/dino-main/task_specs/generate_task_description_en_v2.json',
                         help="A json file providing the instructions and other information required for dataset generation. "
                              "See the 'task_specs' directory for examples and 'README.md' for more details on how to create this file.")
-    parser.add_argument("--task_list_file", type=str, default='/home/yanan/shaonan/GPS_clean/config/setting_5/test.list')
+    parser.add_argument("--task_list_file", type=str)
 
-    parser.add_argument("--model_name", type=str, default="/home/yanan/shaonan/pretrained_model/gpt2-xl",
+    parser.add_argument("--model_name", type=str, 
                         help="The pretrained model to use for dataset generation. Currently, only variants of GPT2 are supported.")
 
     parser.add_argument("--max_output_length", type=int, default=50,

@@ -88,27 +88,8 @@ def read_task_template(task_config_dir, task_names):
 def augment_prompt(input_dir, output_dir, device='0,1', aug_target_num=30, mode='t0'):
 
     # only chinese dino
-    if mode == 'general' or mode == 'cross_task_type':
-        return os.system(f'CUDA_VISIBLE_DEVICES={device} python -m torch.distributed.launch --nproc_per_node 2 /mfs/shaonan/moonshot/CPM-1-Generate-main/use_cpm_to_generate.py \
-                            --model-parallel-size 2 \
-                            --num-layers 32 \
-                            --hidden-size 2560 \
-                            --load /mfs/shaonan/pretrained_model/CPM-large \
-                            --num-attention-heads 32 \
-                            --seq-length 1024 \
-                            --max-position-embeddings 1024 \
-                            --fp16 \
-                            --cache-dir cache \
-                            --out-seq-length 512 \
-                            --temperature 1 \
-                            --top_k 0 \
-                            --top_p 0.8 \
-                            --tokenizer-path /mfs/shaonan/moonshot/CPM-1-Generate-main/bpe_3w_new/ \
-                            --vocab-size 30000 \
-                            --Top_N_patterns 6 \
-                            --input_dir {input_dir} \
-                            --output_dir {output_dir} ')
-    elif mode == 't0':
+    
+    if mode == 't0':
         # TODO
         return os.system(f'CUDA_VISIBLE_DEVICES={device} python ../dino-main/use_dino_to_generate_template_t5.py \
                                     --model_name [YOUR_T5XXL_PATH] \
@@ -122,21 +103,10 @@ def augment_prompt(input_dir, output_dir, device='0,1', aug_target_num=30, mode=
 
 
 def run_test(config_dir, exp_dir, device='0,1'):
-    # cache_config_dir = '/mfs/yanggang/workspace/megabart_latest/megabart/ga_test_v1/ga_configs/cache'
-    # cache_eval_dir = '/mfs/yanggang/workspace/megabart_latest/megabart/ga_test_v1/ga_evals/cache'
     cache_config_dir = os.path.join(exp_dir, 'ga_configs/cache')
     cache_eval_dir = os.path.join(exp_dir, 'ga_evals/cache')
     os.system(f'rm -rf {cache_config_dir}/*')
     os.system(f'cp -r {config_dir}/* {cache_config_dir}')
-    # os.system(
-    #     f'CUDA_VISIBLE_DEVICES={device} python /home/yanan/chonghua/GPS_clean/evaluation/run_all_eval.py \
-    #         --test_split /home/yanan/chonghua/GPS_clean/config/setting_5/test.list \
-    #         --model_name_or_path /home/yanan/shaonan/pretrained_model/T0 \
-    #         --template_dir {cache_config_dir} \
-    #         --dataset_type best_prompt \
-    #         --ga_dev_distribution ratio \
-    #         --parallelize \
-    #         --output_dir {cache_eval_dir} ')
     os.system(
         f'CUDA_VISIBLE_DEVICES={device} python run_all_eval.py \
             --test_split ../config/setting_5/test.list \
@@ -194,7 +164,6 @@ def ga_process_new(exp_dir, max_steps=1, top_K=6, device='0,1', mode='general'):
     select_prompt = defaultdict(dict)
     total_configs = []
 
-    # cache_eval_dir = '/mfs/yanggang/workspace/megabart_latest/megabart/ga_test_v1/ga_evals/cache'
     cache_eval_dir = os.path.join(exp_dir, 'ga_evals/cache')
 
     for ga_step in range(max_steps):
@@ -381,9 +350,7 @@ if __name__ == '__main__':
     device = ','.join([str(x) for x in range(8)])
     # device = '0,1,2'
     # 除了这个dir，还需要更新run_test的脚本、以及augment的方式
-    # exp_dir = '/home/yanan/chonghua/GPS_clean/evaluation/ga_t0_t5_lm'
     exp_dir = 'GPS_output'
-    # exp_dir = '/home/yanan/chonghua/GPS_clean/evaluation/ga_t0_t5_lm_part2'
     if not os.path.exists(os.path.join(exp_dir, 'ga_configs')):
         os.makedirs(os.path.join(exp_dir, 'ga_configs'), exist_ok=True)
         os.makedirs(os.path.join(exp_dir, 'ga_configs', 'cache'), exist_ok=True)

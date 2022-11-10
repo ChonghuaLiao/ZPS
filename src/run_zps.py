@@ -401,65 +401,28 @@ def main():
     padding = "max_length" if args.pad_to_max_length else False
 
     for dataset_name, dataset_config_name in test_task_list:
-        # In distributed evaluation, the load_dataset function guarantee that only one local process can concurrently
-        # download the dataset.
-        # if args.dataset_type == 'ga':
-        #     # 注意anli和winogrand使用测试集，因为其dev/test是adversarial的
-        #     if dataset_name == "anli":
-        #         raw_datasets = load_dataset(dataset_name, split=f'train_{dataset_config_name}')
-        #     elif dataset_name == 'winogrande':
-        #         raw_datasets = load_dataset(dataset_name, dataset_config_name, split="train")
-        #     elif dataset_name == 'hellaswag':
-        #         raw_datasets = load_dataset('/home/yanan/shaonan/data/hellaswag', split="train")
-        #     else:
-        #         # dataset_name: super glue, dataset_config_name: rte
-        #         raw_datasets = load_dataset(dataset_name, dataset_config_name, split="train")
-        # else:
-        # if dataset_name == "anli":
-        #     # 读anli数据集（不是p3，是原始数据集）
-        #     raw_datasets = load_dataset(dataset_name, split=f'dev_{dataset_config_name}')
-        # elif dataset_name == 'hellaswag':
-        #     raw_datasets = load_dataset('/home/yanan/shaonan/data/hellaswag', split="validation")
-        # elif dataset_name == 'story_cloze':
-        #     raw_datasets = load_dataset('json', data_files='/home/yanan/shaonan/data/T0_dataset/story_cloze_2016/test.json')['train']
-            
-        #     def convert_int(example):
-        #         example["answer_right_ending"] = int(example["answer_right_ending"])
-        #         return example
-        #     raw_datasets = raw_datasets.map(convert_int)
-        # else:
-        #     # dataset_name: super glue, dataset_config_name: rte
-        #     raw_datasets = load_dataset(dataset_name, dataset_config_name, split="validation")
-        #     # TODO(Victor): enable loading pre-processed dataset from https://huggingface.co/datasets/bigscience/P3
-        
+        regularized_name = f'{dataset_name}_{dataset_config_name}' if dataset_config_name else dataset_name
+        dataset_root = '../T0_dataset'
         if dataset_config_name:
             if dataset_name == 'story_cloze':
-                data_path = os.path.join("/share/zongyu/zhoujing/huggingface_datasets", dataset_name, dataset_config_name, "test")
+                data_path = os.path.join(dataset_root, regularized_name, "test.json")
             else:
-                data_path = os.path.join("/share/zongyu/zhoujing/huggingface_datasets", dataset_name, dataset_config_name, "validation")
+                data_path = os.path.join(dataset_root, regularized_name, "validation.json")
         else:
-            data_path = os.path.join("/share/zongyu/zhoujing/huggingface_datasets", dataset_name, "validation")
-        raw_datasets = load_from_disk(data_path)
-
+            data_path = os.path.join(dataset_root, regularized_name, "validation.json")
+        # dev_datasets = load_from_disk(data_path)
+        raw_datasets = load_dataset('json', data_files=data_path)['train']
+        if 'story' in regularized_name:
+            labels = np.array(raw_datasets['answer_right_ending'])
+            labels = labels.astype('int')
+            raw_datasets = raw_datasets.remove_columns('answer_right_ending')
+            raw_datasets = raw_datasets.add_column('answer_right_ending', labels)
+            raw_datasets = raw_datasets.flatten_indices()
         logger.info(f'raw dataset for {dataset_name}_{dataset_config_name}: {raw_datasets}')
 
         # Trim a number of evaluation examples
-        regularized_name = f'{dataset_name}_{dataset_config_name}' if dataset_config_name else dataset_name
         if args.debug:
             raw_datasets = raw_datasets.select(range(min(100, len(raw_datasets))))
-        elif args.dataset_type == 'best_prompt':
-            idx_list = None
-            if os.path.exists(os.path.join(args.output_dir, f'{regularized_name}_preds.npy')):
-                idx_and_preds = np.load(os.path.join(args.output_dir, f'{regularized_name}_preds.npy'), allow_pickle=True)
-                idx_and_preds = idx_and_preds.item()
-                idx_list = idx_and_preds['idx']
-                
-            # 1000个样本即可，再多没有意义
-            if len(raw_datasets) > 64:
-                if idx_list is None:
-                    idx_list = np.random.choice(list(range(len(raw_datasets))), 64, replace=False)
-                raw_datasets = raw_datasets.select(idx_list)
-                raw_datasets = raw_datasets.flatten_indices()
         else:
             pass  # 不截断
 
@@ -536,14 +499,6 @@ def main():
 
         # Get the prompt to apply and the possible targets.
         logger.info(f'use template_dir: {args.template_dir}')
-        # if dataset_name == 'anli' and args.dataset_type != 'ga':
-        #     # ga时r1 r2 r3视作不同的数据集
-        #     prompts = DatasetTemplates(dataset_name, template_dir=args.template_dir)
-        # else:
-        #     prompts = DatasetTemplates(
-        #         f"{dataset_name}" if dataset_config_name is None else f"{dataset_name}/{dataset_config_name}",
-        #         template_dir=args.template_dir)
-        
 
         result_summary = []
         # TODO
@@ -724,6 +679,7 @@ def main():
             kmeans_index = kmeans.cluster_centers_.argmax()
             prompt_idxes = np.where(kmeans.labels_ == kmeans_index)[0]
             # prompt_idxes = np.where(keep_sum_p_m_p_confidence >= np.mean(keep_sum_p_m_p_confidence))[0]
+            task_name = f'{dataset_name}/{dataset_config_name}' if dataset_config_name else f'{dataset_name}'
             keep_prompt_idx = np.array(list(range(TOP_K_for_each_task[task_name])))
             if len(prompt_idxes) < len(keep_prompt_idx) // 2:
                 prompt_idxes = np.argsort(sum_confidence)[-len(keep_prompt_idx) // 2:]
@@ -738,7 +694,7 @@ def main():
             prompt_vote_pred = all_logits[prompt_idxes].sum(axis=0).argmax(axis=-1)
             kmeans_accs = (all_predictions == prompt_vote_pred).sum(axis=-1)/len(all_predictions[0])
             kmeansidx = np.argmax(kmeans_accs)
-            best_acc = real_evals[pmp_kmeansidx]
+            best_acc = real_evals[kmeansidx]
 
             logger.info(f" Mean Results / Median Results: {round(np.mean(real_evals) * 100, 2)}/{round(np.median(real_evals) * 100, 2)}")
             logger.info(f" ZPS: {best_acc}")

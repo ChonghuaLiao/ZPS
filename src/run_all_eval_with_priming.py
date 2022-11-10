@@ -95,7 +95,7 @@ def parse_args():
                         required=True, )
     parser.add_argument("--config_name", type=str, default=None,
                         help="Pretrained config name or path if not the same as model_name", )
-    parser.add_argument("--template_dir", type=str, default='/mfs/shaonan/moonshot/t-zero/templates_test',
+    parser.add_argument("--template_dir", type=str, default='..templates_test',
                         help="模版文件的位置", )
     parser.add_argument("--tokenizer_name", type=str, default=None,
                         help="Pretrained tokenizer name or path if not the same as model_name", )
@@ -376,7 +376,7 @@ def main():
             elif dataset_name == 'winogrande':
                 raw_datasets = load_dataset(dataset_name, dataset_config_name, split="train")
             elif dataset_name == 'hellaswag':
-                raw_datasets = load_dataset('/home/yanan/shaonan/data/hellaswag', split="train")
+                raw_datasets = load_dataset('../T0_dataset/hellaswag', split="train")
             else:
                 # dataset_name: super glue, dataset_config_name: rte
                 raw_datasets = load_dataset(dataset_name, dataset_config_name, split="train")
@@ -386,8 +386,8 @@ def main():
                 raw_datasets = load_dataset(dataset_name, split=f'dev_{dataset_config_name}')
                 raw_datasets_train = load_dataset(dataset_name, split=f'train_{dataset_config_name}')
             elif dataset_name == 'hellaswag':
-                raw_datasets = load_dataset('/home/yanan/shaonan/data/hellaswag', split="validation")
-                raw_datasets_train = load_dataset('/home/yanan/shaonan/data/hellaswag', split="train")
+                raw_datasets = load_dataset('../T0_dataset/hellaswag', split="validation")
+                raw_datasets_train = load_dataset('../T0_dataset/hellaswag', split="train")
             else:
                 # dataset_name: super glue, dataset_config_name: rte
                 raw_datasets = load_dataset(dataset_name, dataset_config_name, split="validation")
@@ -395,17 +395,6 @@ def main():
             # TODO(Victor): enable loading pre-processed dataset from https://huggingface.co/datasets/bigscience/P3
 
         # 直接读json文件
-        # train_file_path = '/home/yanan/shaonan/data/T0_dataset'
-        # if dataset_config_name:
-        #     train_file_path = os.path.join(train_file_path, f'{dataset_name}_{dataset_config_name}')
-        # else:
-        #     train_file_path = os.path.join(train_file_path, dataset_name)
-        # data_files = {
-        #     'train': os.path.join(train_file_path, 'train.json'),
-        #     'validation': os.path.join(train_file_path, 'validation.json')
-        # }
-        # raw_datasets = load_dataset('json', data_files=data_files)
-        # raw_datasets_train = raw_datasets['train']  # 用于抽取样本做in context learning
         raw_datasets_train = raw_datasets_train.shuffle(seed=42)
         # raw_datasets = raw_datasets['validation']  # 用于评测
 
@@ -417,8 +406,8 @@ def main():
         elif args.dataset_type == 'ga':
             pass  # 不截断
         else:
+            pass
             # 截断，不需要eval那么多
-            raw_datasets = raw_datasets.select(range(min(1000, len(raw_datasets))))
 
         logger.info(f'raw dataset after select for {dataset_name}_{dataset_config_name}: {raw_datasets}')
         column_names = raw_datasets.column_names

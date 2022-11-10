@@ -131,7 +131,7 @@ def parse_args():
                         help="Path to pretrained model or model identifier from huggingface.co/models. The list of T0 variants can be found on `https://huggingface.co/bigscience/T0_3B`",
                         required=True, )
     parser.add_argument("--config_name", type=str, default=None, help="Pretrained config name or path if not the same as model_name", )
-    parser.add_argument("--template_dir", type=str, default='/home/yanan/shaonan/t-zero/templates_test', help="模版文件的位置", )
+    parser.add_argument("--template_dir", type=str, default='../templates_test', help="模版文件的位置", )
     parser.add_argument("--tokenizer_name", type=str, default=None, help="Pretrained tokenizer name or path if not the same as model_name", )
     parser.add_argument("--use_slow_tokenizer", action="store_true",
                         help="If passed, will use a slow tokenizer (not backed by the 🤗 Tokenizers library).", )
@@ -406,21 +406,6 @@ def build_pt_dataset(dataset_name, dataset_config_name, raw_datasets, distributi
         label_key = 'answer_right_ending'
     filtered_dataset = raw_datasets
 
-    # 对anli数据集和winogrande的特别处理
-    # if dataset_name == 'anli':
-    #     print(f'len of raw_dataset: {filtered_dataset}')
-    #     filtered_dataset = filtered_dataset.filter(lambda x: len(x['reason']) > 0)
-    #     print(f'len of filtered_dataset: {filtered_dataset}')
-    #     if dataset_config_name == 'r1':
-    #         filtered_dataset = filtered_dataset.select(range(900))
-    #     elif dataset_config_name == 'r2':
-    #         filtered_dataset = filtered_dataset.select(range(1500))
-    #     elif dataset_config_name == 'r3':
-    #         index = list(range(len(filtered_dataset)))
-    #         index = index[8000:]
-    #         filtered_dataset = filtered_dataset.select(index)
-    # if dataset_name == 'winogrande':
-    #     filtered_dataset = load_dataset('winogrande', 'winogrande_debiased', split='train')
 
     label_list = filtered_dataset[label_key]
     label_type_set = set(label_list)
@@ -432,27 +417,13 @@ def build_pt_dataset(dataset_name, dataset_config_name, raw_datasets, distributi
         single_label_dataset = filtered_dataset.filter(lambda x: x[label_key] == label_type)
         single_label_dataset = single_label_dataset.shuffle(seed=42)
 
-        # if distribution == 'ratio':
-        #     example_num_per_label = math.ceil(
-        #         dataset_distribution[task_name][label_type] / sum(dataset_distribution[task_name].values()) * MAXNUM)
-        # else:
         example_num_per_label = math.ceil(MAXNUM / len(label_type_set))
 
         ga_dataset_list.append(single_label_dataset.select(
             range(min(example_num_per_label, len(single_label_dataset)))))
 
-    # 每个class的样本train和eval各分一半
-    # train_dataset_list = [ga_dataset.select(range(len(ga_dataset) // 2)) for ga_dataset in ga_dataset_list]
-    # dev_dataset_list = [ga_dataset.select(range(len(ga_dataset)//2, len(ga_dataset))) for ga_dataset in ga_dataset_list]
-
-    # combined_train_dataset = concatenate_datasets(train_dataset_list)
-    # combined_dev_dataset = concatenate_datasets(dev_dataset_list)
     combined_ga_dataset = concatenate_datasets(ga_dataset_list)
 
-    # print(f'combined_train_dataset: {combined_train_dataset}')
-    # print(f'labels: {combined_train_dataset[label_key]}')
-    # print(f'combined_dev_dataset: {combined_dev_dataset}')
-    # print(f'labels: {combined_dev_dataset[label_key]}')
     print(f'combined_ga_dataset: {combined_ga_dataset}')
     print(f'labels: {combined_ga_dataset[label_key]}')
     # return combined_train_dataset, combined_dev_dataset
@@ -1074,8 +1045,6 @@ def get_pseudo_label(args, dataset_name, dataset_config_name, template_list, mod
     all_predictions = []
     all_log_probs = []
     all_logits = []
-    ROOT_DIR = '/share/zongyu/chonghua/GPS_clean/T0'
-    #if epoch != 0:
     if epoch != -1:
         for template_id in template_list:
             template = prompts.templates[template_id]
@@ -1161,12 +1130,7 @@ def get_pseudo_label(args, dataset_name, dataset_config_name, template_list, mod
 
     if accelerator.is_main_process:
         regularized_name = f"{dataset_name}" if dataset_config_name is None else f"{dataset_name}_{dataset_config_name}"
-        # if epoch == -1:
-        #     idx_and_preds = np.load(os.path.join(ROOT_DIR, f'{regularized_name}.npy'), allow_pickle=True)
-        #     idx_and_preds = idx_and_preds.item()
-        #     all_predictions = idx_and_preds['all_predictions']
-        #     all_logits = idx_and_preds['all_logits']
-        # else:
+
         all_predictions = np.array(all_predictions)
         all_logits = np.array(all_logits)
 

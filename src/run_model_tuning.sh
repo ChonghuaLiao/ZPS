@@ -1,6 +1,3 @@
-
-
-export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 python run_model_tuning.py \
     --test_split ../config/setting_5/test.list \
     --model_name_or_path /home/yanan/shaonan/pretrained_model/T0 \

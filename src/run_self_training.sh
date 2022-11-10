@@ -1,6 +1,6 @@
-python3 run_self_training.py \
+python run_self_training.py \
     --test_split ../config/setting_5/test.list \
-    --model_name_or_path [MODEL_PATH] \
+    --model_name_or_path [YOUR_MODEL_DIR] \
     --parallelize \
     --dataset_type pt \
     --ga_dev_distribution ratio \
