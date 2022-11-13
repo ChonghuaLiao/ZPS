@@ -30,11 +30,11 @@ The details to reproduce the main results can be found in [SRC](src/README.md).
 ## Citation
 Please cite us if ZPS is useful in your work:
 ```
-@misc{2211.04668,
-Author = {Chonghua Liao and Yanan Zheng and Zhilin Yang},
-Title = {Zero-Label Prompt Selection},
-Year = {2022},
-Eprint = {arXiv:2211.04668},
+@article{liao2022zero,
+  title={Zero-Label Prompt Selection},
+  author={Liao, Chonghua and Zheng, Yanan and Yang, Zhilin},
+  journal={arXiv preprint arXiv:2211.04668},
+  year={2022}
 }
 ```
 
